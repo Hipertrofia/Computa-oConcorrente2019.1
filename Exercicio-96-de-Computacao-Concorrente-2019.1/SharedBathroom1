@@ -1,0 +1,45 @@
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class SharedBathroom1 {
+    private ReentrantLock lock = new ReentrantLock(true);
+    private Condition condition = lock.newCondition();
+
+    private AtomicInteger atual = new AtomicInteger(0);
+    private AtomicInteger cont = new AtomicInteger(0);
+
+    private void lock() {
+        int pass = cont.getAndIncrement();
+
+        while (pass != atual.get()) {
+            try {
+            	condition.await(); 
+            } catch (InterruptedException ie) {}
+        }
+
+        lock.lock();
+    }
+
+    private void unlock() {
+    	atual.getAndIncrement();
+        lock.unlock();
+        condition.signalAll();
+    }
+    
+    public void enterMale() {
+        lock();
+    }
+
+    public void leaveMale() {
+        unlock();
+    }
+
+    public void enterFemale() {
+        lock();
+    }
+
+    public void leaveFemale() {
+        unlock();
+    }
+}
